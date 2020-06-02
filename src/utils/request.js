@@ -30,6 +30,7 @@ service.interceptors.request.use(
   }
 )
 
+let showTime = 0;
 const whiteUrl = ['/api/auth/login', '/api/auth/logout']
 // response interceptor
 service.interceptors.response.use(
@@ -48,38 +49,44 @@ service.interceptors.response.use(
 
     if (res.code) {
       if (res.code === 'not-logged-in' && !whiteUrl.includes(response.config.url)) {
-        MessageBox.confirm('您已退出, 可以取消停留在当前页面,或者重新登录', '注销', {
-          confirmButtonText: '重新登录',
-          cancelButtonText: '取消',
-          type: 'warning',
-          closeOnClickModal: false,
-        }).then(() => {
-          store.dispatch('login/resetToken').then(() => {
-            location.reload()
-          })
-        }).catch(() =>{});
+        // 避免短时间（1.5s）内重复弹窗；即如果1.5s内弹出过这个弹窗提醒则不再弹出
+        if (Date.now() - showTime > 1500) {
+          MessageBox.confirm('您已退出, 可以取消停留在当前页面,或者重新登录', '注销', {
+            confirmButtonText: '重新登录',
+            cancelButtonText: '取消',
+            type: 'warning',
+            closeOnClickModal: false,
+          }).then(() => {
+            store.dispatch('login/resetToken').then(() => {
+              location.reload()
+            })
+          }).catch(() => { });
+        }
         return Promise.reject(new Error(res.code))
       } else if (/^subject-does-not.*/.test(res.code)) {
-        Message({
-          message: '缺少权限 : ' + (res.msg || ''),
-          type: 'error',
-          duration: 3 * 1000
-        })
+        if (Date.now() - showTime > 1500) {
+          Message({
+            message: '缺少权限 : ' + (res.msg || ''),
+            type: 'error',
+            duration: 2 * 1000
+          })
+        }
         return Promise.reject(new Error(res.code))
       } else {
         return res
       }
-    } else {
-      return res
     }
+    return res;
   },
   error => {
     console.log('请求异常 --- ', error) // for debug
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 3 * 1000
-    })
+    if (Date.now() - showTime > 1000) {
+      Message({
+        message: error.message,
+        type: 'error',
+        // duration: 1 * 1000
+      })
+    }
     return Promise.reject(error)
   }
 )
