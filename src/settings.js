@@ -12,6 +12,7 @@ module.exports = {
   // 身份配置
   systemRoles: [
     { name: '管理员', code: 'admin' },
-    { name: '客服', code: 'tmk' }
+    { name: '客服', code: 'TMK' },
+    { name: '内部管理员', code: 'system' }
   ]
 }

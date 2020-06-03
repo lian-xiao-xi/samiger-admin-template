@@ -43,25 +43,6 @@
 
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
 
-      <div class="tips">
-        管理员:
-        <span style="margin-right:10px;">用户名: admin</span>
-        <span style="margin-right:10px;">密码: any</span>
-        <span>角色: ['admin']</span>
-      </div>
-      <div class="tips">
-        客服:
-        <span style="margin-right:10px;">用户名: tmk</span>
-        <span style="margin-right:10px;">密码: any</span>
-        <span>角色: ['tmk']</span>
-      </div>
-      <div class="tips">
-        管理员 & 客服:
-        <span style="margin-right:10px;">用户名: adminTmk</span>
-        <span style="margin-right:10px;">密码: any</span>
-        <span>角色: ['admin', 'tmk']</span>
-      </div>
-
     </el-form>
   </div>
 </template>
@@ -117,8 +98,9 @@ export default {
           this.$store.dispatch('user/login', this.loginForm).then(() => {
             this.$router.push({ path: '/' })
             this.loading = false
-          }).catch(() => {
-            this.loading = false
+          }).catch((error) => {
+            this.loading = false;
+            this.$message.error('登录失败')
           })
         } else {
           return false
