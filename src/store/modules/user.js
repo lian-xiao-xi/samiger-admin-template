@@ -53,22 +53,37 @@ const actions = {
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
+        if (!response) {
+          reject('用户角色信息获取失败！请稍后重新登陆！');
+        }
+        /**
+         * 后台返回数据格式：
+         * {
+          roles: [
+            {code: 'system', name: '系统管理员'},
+            {code: 'admin', name: '超级管理员'},
+          ],
+          user: {loginName: '张三', headImgUrl: 'url'}
+        }
+         */
+        
         if (response.code === undefined) {
-          if (!response) {
-            reject('用户角色信息获取失败！请稍后重新登陆！');
-          }
-          if (response.length <= 0) reject('用户无角色！请稍后重新登陆！');
-
-          const couldLoginRoles = ['admin', 'tmk'];
+          // 可以登录的有效角色，视项目实际情况而定
+          const couldLoginRoles = ['system', 'admin', 'tmk'];
           
-          const myRoles = response.roles.filter(role => couldLoginRoles.includes(role));
-          if (myRoles.length <= 0) {
-            reject('暂无登录权限！');
-          }
+          const myRoles = response.roles.reduce((acc, cur) => {
+            if(couldLoginRoles.includes(cur.code)) {
+              acc.push(cur.code)
+            }
+            return acc;
+          }, []);
+          console.log(myRoles)
+
+          if (!response.roles || response.roles.length <= 0 || myRoles.length <=0) reject('用户无角色！请稍后重新登陆！');          
 
           commit('SET_ROLES', myRoles);
-          commit('SET_NAME', response.loginName);
-          commit('SET_AVATAR', response.headImgUrl);
+          commit('SET_NAME', response.user.loginName);
+          commit('SET_AVATAR', response.user.headImgUrl);
           resolve(myRoles);
         } else {
           reject(response);
